@@ -8,6 +8,10 @@ A simple Neovim plugin to open a floating window running `htop`.
 `:Htop` to open the floating window.
 `q` to close the floating window.
 
+[Demo](docts/htop.mov)
+
+
+
 ---
 
 #### Installation
