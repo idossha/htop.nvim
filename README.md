@@ -1,7 +1,9 @@
 
 # htop.nvim
 
-A simple Neovim plugin to open a floating window running `htop`.
+A simple Neovim plugin to open a floating window running `htop`. 
+
+hit `q` to close the floating window.
 
 ## Installation
 
@@ -12,8 +14,6 @@ return {
   {
     "idossha/htop.nvim",
     config = function()
-      require("htop").setup({})
-      -- You can optionally override the key mapping here:
       vim.keymap.set("n", "<leader>HT", require("htop").open, { desc = "Open floating htop" })
     end,
   },
