@@ -7,6 +7,6 @@ end
 vim.g.loaded_htop_plugin = true
 
 -- create a user command so that users can type :Htop
-vim.api.nvim_create_user_command("htop", function()
+vim.api.nvim_create_user_command("Htop", function()
   require("htop").open()
 end, { desc = "Open floating htop" })
