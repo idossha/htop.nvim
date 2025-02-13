@@ -2,6 +2,15 @@
 -- lua/htop/init.lua
 local M = {}
 
+-- Store configuration options (if needed later)
+M.config = {}
+
+-- A simple setup function to save user options
+function M.setup(opts)
+  M.config = opts or {}
+end
+
+
 function M.open()
   -- Create a new unlisted buffer
   local buf = vim.api.nvim_create_buf(false, true)
