@@ -1,11 +1,16 @@
 
-# htop.nvim
+### htop.nvim
 
 A simple Neovim plugin to open a floating window running `htop`. 
 
-hit `q` to close the floating window.
+---
+**Usage:** 
+`:Htop` to open the floating window.
+`q` to close the floating window.
 
-## Installation
+---
+
+#### Installation
 
 Using [lazy.nvim](https://github.com/folke/lazy.nvim):
 
