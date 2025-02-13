@@ -10,7 +10,7 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim):
 ```lua
 return {
   {
-    "yourgithubusername/htop.nvim",
+    "idossha/htop.nvim",
     config = function()
       require("htop").setup({})
       -- You can optionally override the key mapping here:
