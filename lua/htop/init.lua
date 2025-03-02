@@ -2,53 +2,84 @@
 -- lua/htop/init.lua
 local M = {}
 
--- Store configuration options (if needed later)
-M.config = {}
+-- Default configuration
+M.config = {
+  width = 0.85,
+  height = 0.85,
+  border = "rounded",
+  title = " htop ",
+  title_pos = "center",
+  command = "htop",
+  keymaps = {
+    close = "q",
+    help = "?",
+  },
+  float_opts = {
+    relative = "editor",
+    style = "minimal",
+    zindex = 50,
+  },
+}
 
--- A simple setup function to save user options
+-- Setup function to override default options
 function M.setup(opts)
-  M.config = opts or {}
+  M.config = vim.tbl_deep_extend("force", M.config, opts or {})
 end
-
 
 function M.open()
   -- Create a new unlisted buffer
   local buf = vim.api.nvim_create_buf(false, true)
 
-  -- Calculate content dimensions (80% of the editor window)
-  local content_width = math.floor(vim.o.columns * 0.8)
-  local content_height = math.floor(vim.o.lines * 0.8)
+  -- Calculate dimensions
+  local width = math.floor(vim.o.columns * M.config.width)
+  local height = math.floor(vim.o.lines * M.config.height)
 
-  -- Account for the border: for "rounded" border, it's 1 cell on each side
+  -- Account for the border
   local border_width = 2  -- left + right
   local border_height = 2 -- top + bottom
 
-  -- Total dimensions including border
-  local total_width = content_width + border_width
-  local total_height = content_height + border_height
+  -- Calculate total dimensions including border
+  local total_width = width + border_width
+  local total_height = height + border_height
 
-  -- Calculate position to center the entire floating window
+  -- Center the window
   local row = math.floor((vim.o.lines - total_height) / 2)
   local col = math.floor((vim.o.columns - total_width) / 2)
 
-  local opts = {
-    style = "minimal",
-    relative = "editor",
-    width = content_width,
-    height = content_height,
+  -- Create the window options
+  local win_opts = vim.tbl_deep_extend("force", M.config.float_opts, {
+    width = width,
+    height = height,
     row = row,
     col = col,
-    border = "rounded",
-  }
+    border = M.config.border,
+    title = M.config.title,
+    title_pos = M.config.title_pos,
+  })
 
-  -- Open a floating window and capture its ID
-  local win = vim.api.nvim_open_win(buf, true, opts)
+  -- Open a floating window
+  local win = vim.api.nvim_open_win(buf, true, win_opts)
+
+  -- Set window options for a better appearance
+  vim.api.nvim_win_set_option(win, "winblend", 0)
+  vim.api.nvim_win_set_option(win, "cursorline", true)
+  
+  -- Create highlight for the window
+  if vim.fn.has("nvim-0.9") == 1 then
+    -- Set window highlight groups
+    vim.api.nvim_set_hl(0, "HtopBorder", { link = "FloatBorder" })
+    vim.api.nvim_set_hl(0, "HtopNormal", { link = "Normal" })
+    vim.api.nvim_set_hl(0, "HtopTitle", { link = "Title" })
+    
+    -- Apply highlights to the window
+    vim.api.nvim_win_set_option(win, "winhighlight", "Normal:HtopNormal,FloatBorder:HtopBorder,FloatTitle:HtopTitle")
+  end
 
   -- Launch htop in the terminal buffer
-  vim.fn.termopen("htop")
+  vim.fn.termopen(M.config.command)
   vim.cmd("startinsert")
 
-  -- Create a function to close the window and delete the buffer
+  -- Function to close the window
   local function close_all()
     if vim.api.nvim_win_is_valid(win) then
       vim.api.nvim_win_close(win, true)
@@ -58,14 +89,30 @@ function M.open()
     end
   end
 
-  -- Map 'q' in both normal and terminal modes to close the floating window and buffer.
-  vim.keymap.set({ "n", "t" }, "q", function()
-    -- If in terminal mode and still in insert, first exit terminal-insert mode.
+  -- Set keymaps
+  vim.keymap.set({ "n", "t" }, M.config.keymaps.close, function()
+    -- If in terminal mode and in insert, exit terminal-insert mode
     if vim.api.nvim_get_mode().mode:sub(1,1) == "i" then
       vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<C-\\><C-n>", true, false, true), "n", true)
     end
     close_all()
   end, { buffer = buf, noremap = true, silent = true })
+
+  -- Set help keymap to show keybindings
+  vim.keymap.set({ "n", "t" }, M.config.keymaps.help, function()
+    vim.api.nvim_echo({
+      { "htop.nvim keybindings:\n", "Title" },
+      { M.config.keymaps.close .. ": ", "Identifier" }, { "Close htop\n", "Normal" },
+      { M.config.keymaps.help .. ": ", "Identifier" }, { "Show this help", "Normal" },
+    }, true, {})
+  end, { buffer = buf, noremap = true, silent = true })
+
+  -- Set buffer autocmd to close on BufLeave
+  vim.api.nvim_create_autocmd("BufLeave", {
+    buffer = buf,
+    once = true,
+    callback = close_all,
+  })
 end
 
 return M
